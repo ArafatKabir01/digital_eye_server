@@ -41,6 +41,7 @@ async function run() {
     const cameraPartsCollection = client.db('DigitalEye').collection('cameraParts');
     const orderPartsCollection = client.db('DigitalEye').collection('customerOrder');
     const userCollection = client.db('DigitalEye').collection('user');
+    const paymentCollection = client.db('DigitalEye').collection('paymentCollection');
 
     app.get('/allParts', async (req, res) => {
       const query = {};
@@ -151,6 +152,8 @@ async function run() {
 
     })
 
+
+
     // paid user
     app.patch('/buying/:id', verifyJwt, async(req, res) =>{
       const id  = req.params.id;
@@ -164,7 +167,7 @@ async function run() {
       }
 
       const result = await paymentCollection.insertOne(payment);
-      const updatedBooking = await bookingCollection.updateOne(filter, updatedDoc);
+      const updatedBooking = await orderPartsCollection.updateOne(filter, updatedDoc);
       res.send(updatedBooking);
     })
 
