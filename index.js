@@ -6,6 +6,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const e = require('express');
 const app = express();
 const port = process.env.PORT || 5000;
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 // Middleware 
 app.use(cors());
@@ -128,6 +129,18 @@ async function run() {
       res.send({result,token})
 
     })
+    app.post('/create-payment-intent', verifyJwt, async(req, res) =>{
+      const product = req.body;
+      const price = product.price;
+      const amount = price*100;
+      console.log(amount)
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount : amount,
+        currency: 'usd',
+        payment_method_types:['card']
+      });
+      res.send({clientSecret: paymentIntent.client_secret})
+    });
 
     // get user 
     app.get('/users' , verifyJwt, async(req , res) =>{
@@ -136,6 +149,23 @@ async function run() {
       const allusers = await cursor.toArray();
       res.send(allusers)
 
+    })
+
+    // paid user
+    app.patch('/buying/:id', verifyJwt, async(req, res) =>{
+      const id  = req.params.id;
+      const payment = req.body;
+      const filter = {_id: ObjectId(id)};
+      const updatedDoc = {
+        $set: {
+          paid: true,
+          transactionId: payment.transactionId
+        }
+      }
+
+      const result = await paymentCollection.insertOne(payment);
+      const updatedBooking = await bookingCollection.updateOne(filter, updatedDoc);
+      res.send(updatedBooking);
     })
 
 
@@ -150,7 +180,7 @@ async function run() {
       
     });
 
-    app.get('/myOrder/:id', async (req, res) => {
+    app.get('/myOrder/:id',verifyJwt, async (req, res) => {
       const id = req.params.id
       const query = { _id: ObjectId(id) }
       const orders = await orderPartsCollection.find(query).toArray();
