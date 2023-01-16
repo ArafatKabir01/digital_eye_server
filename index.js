@@ -149,7 +149,22 @@ async function run() {
       res.send(purchaseProduct);
 
     });
+    app.put('/user/:email' , async(req ,  res)=>{
+      const email = req.params.email;
+      const user = req.body
+      const filter = {email : email};
+      const options = {upsert : true};
+      const updateDoc = {
+        $set : user,
 
+      };
+      const result = await userCollection.updateOne(filter , updateDoc , options);
+      const token = await jwt.sign({email : email}, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "2d"
+      })
+      res.send({result,token})
+
+    })
     // admin
     app.get('/admin/:email', async (req, res) => {
       const useremail = req.params.email;
