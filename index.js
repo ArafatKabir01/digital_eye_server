@@ -99,9 +99,21 @@ async function run() {
       const newProduct = req.body;
       const result = await orderPartsCollection.insertOne(newProduct);
       res.send(result);
-
-
     });
+
+    app.put('/orderUpdate', async (req, res) => {
+      const updateQuantity = req.body
+      const productId = updateQuantity.productId
+      const filter = {productId: (productId)}
+      const option ={upsert : true};
+      const newQuantity = {
+        $set: updateQuantity
+      };
+      const result = await orderPartsCollection.updateMany(filter , newQuantity ,option)
+      res.send(result);
+      
+
+    })
     // put review
     app.put('/customerReview/:id', async (req, res) => {
       const newReview = req.body;
