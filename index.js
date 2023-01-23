@@ -181,10 +181,17 @@ async function run() {
     app.get('/admin/:email', async (req, res) => {
       const useremail = req.params.email;
       const user = await userCollection.findOne({ email: useremail })
-      
       res.send(user)
     })
-
+    app.put('/user/admin/:email',  async (req, res) => {
+      const email = req.params.email;
+      const filter = { email: email };
+      const updateDoc = {
+        $set: { role: 'admin' },
+      };
+      const result = await userCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    })
     app.post('/create-payment-intent', verifyJwt, async (req, res) => {
       const product = req.body;
       const price = product.price;
